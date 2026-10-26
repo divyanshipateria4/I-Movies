@@ -1,0 +1,12 @@
+import app from '../server/app.js';
+import { connectToDatabase } from '../server/database.js';
+
+export default async function handler(req, res) {
+  try {
+    await connectToDatabase();
+    return app(req, res);
+  } catch (error) {
+    console.error('MongoDB connection failed:', error.message);
+    return res.status(500).json({ message: 'Database connection failed.' });
+  }
+}
