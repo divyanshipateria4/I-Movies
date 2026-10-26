@@ -11,10 +11,26 @@ const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(s => s.trim()) : true }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
-app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'IMovies API' }));
-app.use('/api/movies', movieRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/bookings', bookingRoutes);
+
+// Normalize req.url if platform rewrite altered it
+app.use((req, res, next) => {
+  const matched = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'];
+  if (matched && matched.startsWith('/api') && (req.url === '/api' || req.url === '/' || req.url === '/api/index.js')) {
+    req.url = matched;
+  }
+  next();
+});
+
+const apiRouter = express.Router();
+apiRouter.get('/health', (req, res) => res.json({ status: 'ok', service: 'IMovies API' }));
+apiRouter.use('/movies', movieRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/bookings', bookingRoutes);
+
+// Support both /api/... (canonical) and /... for seamless Vercel serverless integration
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
+
 app.use((req, res) => res.status(404).json({ message: 'Route not found.' }));
 app.use((err, req, res, next) => {
   console.error(err);
