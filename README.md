@@ -1,55 +1,70 @@
-# IMovies — MERN Movie Booking
+# IMovies — Full-Stack MERN Movie Booking (Single-Service Vercel Deployment)
 
-A cinematic, responsive movie discovery and ticket-booking app built with React + Vite, Express, MongoDB, and JWT authentication. The design uses a midnight cinema palette, bold editorial typography, poster-led discovery, and an interactive seat picker.
+A cinematic, responsive movie discovery and ticket-booking app built with React + Vite, Express, MongoDB, and JWT authentication. The design features a midnight cinema palette, bold editorial typography, poster-led discovery, and an interactive seat picker.
 
 ## Features
-- Browse/search/filter a seeded movie catalog with genre and rating details
-- Movie details, showtime selection, and interactive seat selection
-- Register/login with hashed passwords and JWT-protected bookings
-- Prevents double-booking seats for a showtime
-- Booking history and booking confirmation view
-- MongoDB persistence; demo movie catalog is included as seed data
-- Responsive layout for desktop, tablet, and mobile
+- **Single-Service Architecture**: Deploy both frontend (Vite SPA) and entire backend API on Vercel as a single project.
+- **Zero Extra Backend Services Needed**: No Render, Railway, or external Node hosting required.
+- **Strictly 1 Serverless Function**: Consolidates all API routes (`/api/*`) into **1 single function** (`api/index.js`), staying well below Vercel Free / Hobby tier limit of 12 serverless functions.
+- **Same-Origin API Routing**: Frontend queries `/api` directly on the same domain with no CORS hurdles or separate backend URLs.
+- **Interactive Seat Picker**: Select up to 8 seats per booking with double-booking prevention.
+- **Authentication**: JWT-based authentication with bcrypt-hashed passwords.
+- **Booking History**: Track past bookings and view confirmation codes.
+- **Responsive Design**: Optimized for desktop, tablet, and mobile screens.
 
 ## Requirements
-Node.js 18+ and MongoDB (local or Atlas).
+- Node.js 18+
+- MongoDB database (MongoDB Atlas recommended for cloud deployment)
 
-## Quick start
-1. Create `server/.env` from `server/.env.example` and set `MONGO_URI` and `JWT_SECRET`.
-2. From this folder run:
+## Quick Start (Local Development)
+
+1. Create `.env` or set environment variables:
+   ```env
+   MONGO_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret_key
+   PORT=5000
+   ```
+2. Install dependencies:
    ```bash
-   npm install
    npm run install:all
+   ```
+3. (Optional) Seed demo movies to your database:
+   ```bash
+   npm run seed
+   ```
+4. Start both frontend and backend concurrently:
+   ```bash
    npm run dev
    ```
-3. Frontend: `http://localhost:5173` — API: `http://localhost:5000/api`
-4. Seed demo movies: in another terminal, run `npm run seed --prefix server`.
+   - Frontend: `http://localhost:5173`
+   - Backend API: `http://localhost:5000/api`
 
-The frontend has a demo-friendly empty-state if the API/database is not connected, but booking/auth require the backend and MongoDB.
+## Deploy to Vercel (Single-Service)
 
-## Deploy to Vercel
-This repository is configured to deploy the Vite frontend and Express API together as one Vercel project.
+This project is configured out of the box to deploy as a unified full-stack application on Vercel's Free / Hobby plan.
 
-1. Import the repository into Vercel and leave the project root set to the repository root.
-2. In **Project Settings → Environment Variables**, add:
-   - `MONGO_URI` — your MongoDB Atlas connection string.
-   - `JWT_SECRET` — a long, random secret used to sign login tokens.
-   - `CLIENT_URL` — optional; set this to your Vercel origin if you want to restrict API CORS. Leave unset for the same-origin deployment.
-3. Deploy. The Vercel configuration installs the client and server dependencies, builds `client`, serves the frontend, and routes `/api/*` to the Express serverless function.
+### Steps:
+1. Push your code to GitHub / GitLab / Bitbucket.
+2. In Vercel, click **Add New... → Project** and import the repository.
+3. Keep the **Root Directory** as `./` (repository root).
+4. Under **Environment Variables**, add:
+   - `MONGO_URI`: Your MongoDB Atlas connection URI.
+   - `JWT_SECRET`: A secure secret string for signing JWT tokens.
+5. Click **Deploy**.
 
-The frontend uses `/api` by default, so `VITE_API_URL` is not required for a same-domain deployment. For local development, Vite proxies `/api` to the Express server on port 5000. Node.js 18+ is required.
+### How Vercel Deployment Works:
+- **Build & Static Assets**: Vercel executes `npm run build` which compiles the Vite client into `client/dist`.
+- **API Routing**: `vercel.json` rewrites all `/api/(.*)` requests to `api/index.js`.
+- **Function Count**: There is only **1 serverless function** deployed, well below the Hobby tier ceiling of 12 functions.
+- **SPA Fallback**: Any non-API route falls back to `/index.html` for client-side routing.
 
-Before deploying, make sure the MongoDB Atlas database user has access to the database and that Atlas network access permits connections from your Vercel deployment. Run `npm run seed --prefix server` once if you want to add the demo movie catalog.
-
-## API overview
-- `GET /api/movies` — list/search/filter movies
-- `GET /api/movies/:id` — movie detail
-- `POST /api/auth/register` — register
-- `POST /api/auth/login` — login
-- `GET /api/auth/me` — current user (JWT)
-- `GET /api/bookings/seats?movieId=...&showtime=...` — booked seats
-- `POST /api/bookings` — create booking (JWT)
-- `GET /api/bookings/mine` — user's bookings (JWT)
-
-## Notes
-This is a learning project. For production, add payment-provider integration, email confirmations, rate limiting, refresh-token/session strategy, monitoring, and stronger booking transaction guarantees using MongoDB replica-set transactions.
+## API Overview
+- `GET  /api/health` — API health check
+- `GET  /api/movies` — List/search/filter movies
+- `GET  /api/movies/:id` — Movie detail
+- `POST /api/auth/register` — Register user
+- `POST /api/auth/login` — Login user
+- `GET  /api/auth/me` — Current user profile (JWT required)
+- `GET  /api/bookings/seats?movieId=...&showtime=...&date=...` — Booked seats
+- `POST /api/bookings` — Create seat booking (JWT required)
+- `GET  /api/bookings/mine` — Current user's bookings (JWT required)
